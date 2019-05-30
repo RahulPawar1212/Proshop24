@@ -30,7 +30,7 @@ EndDate = datetime.date.strftime(EndDate, "%d/%m/%y")
 # create mask to filtter by date
 BetweenDates = ((salesdata['Order Date as dd/mm/yyyy hh:MM:ss'] >= StartDate ) & (salesdata['Order Date as dd/mm/yyyy hh:MM:ss'] <= EndDate) )
 
-# Select data where sales order status is == 'Cancelled'
+# Run maskes and get data
 salesdata = salesdata.loc[GetOtherThanCnl & GetBeginCon  & BetweenDates]
 
 
