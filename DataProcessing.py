@@ -97,6 +97,11 @@ class processData:
 
         wsStock_Update[xl_col_to_name(3,True) + str(wsStock_UpdateMaxRow + 1)].value = FormulaPB
         
+        strRange = xl_col_to_name(3)  + '2' + ':' + xl_col_to_name(3) + str(wsStock_UpdateMaxRow)
+
+        formulaAP = '=SUM(' + xl_col_to_name(4,True) + '{0}' + ':' + xl_col_to_name(wsStock_UpdateMaxCol,True) + '{0}'+ ")"
+        for i, cellObj in enumerate(wsStock_Update[strRange], 2):
+            cellObj[0].value = formulaAP.format(i)
 
         blackFill = PatternFill(start_color='FF000000', end_color='FF000000', fill_type='solid')
         ft_White = Font(color=colors.WHITE)
