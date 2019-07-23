@@ -85,8 +85,9 @@ class StartProcess:
         #print("Enter end date")
         #getEndDate = input()
         #test = self.getStartDate
-        StartDate = dateparser.parse(self.getStartDate_)
-        EndDate = dateparser.parse(self.getEndDate_)
+        
+        StartDate = self.getStartDate_
+        EndDate = self.getEndDate_
         #GrnDataPath = Path(r"C:\Users\rahul.pawar\Desktop\Proshop\Goods Received Notes (Stock Intake).csv")
         #SalesDataPath = Path(r"C:\Users\rahul.pawar\Desktop\Proshop\Sales Export From Backend.csv")
         #SalesReporExcel = Path(r"C:\Users\rahul.pawar\Desktop\Proshop")
@@ -100,6 +101,7 @@ class StartProcess:
         #************************** Import Data *******************************
         Di = DataImport.dataImport()
         GRNdata = Di.getGRNData(GrnDataPath,StartDate,EndDate)
+        #print(GRNdata)
         SalesData = Di.getsalesData(SalesDataPath,StartDate,EndDate)
         #*****************************************************************
 
@@ -123,8 +125,8 @@ class StartProcess:
             wb = pyxl.load_workbook(filename= entry ,read_only=False)
 
             Dp = DataProcessing.processData()
-            Dp.SalesDataProcess(SalesData,wb,datetime.date.strftime(StartDate, "%d/%m/%Y") )
-            Dp.StockDataProcess(GRNdata,wb,datetime.date.strftime(StartDate, "%d/%m/%Y"))   
+            Dp.SalesDataProcess(SalesData,wb,StartDate)
+            Dp.StockDataProcess(GRNdata,wb,StartDate,EndDate)   
             
 
             testpath =  ntpath.basename(entry)

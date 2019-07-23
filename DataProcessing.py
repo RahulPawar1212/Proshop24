@@ -1,10 +1,12 @@
 #import DataImport
-import openpyxl as pyxl
+import datetime
 from pathlib import Path
-from xlsxwriter.utility import xl_rowcol_to_cell,xl_col_to_name
-from openpyxl.styles import Font,Color,PatternFill,Alignment
-from openpyxl.styles import colors
+import pandas as pd
+import openpyxl as pyxl
+from openpyxl.styles import Alignment, Color, Font, PatternFill, colors
 from openpyxl.styles.borders import Border, Side
+from xlsxwriter.utility import xl_col_to_name, xl_rowcol_to_cell
+from py_linq import Enumerable
 
 class processData:
     def __init__(self):
@@ -70,57 +72,125 @@ class processData:
         
         _cell4 = wsSales_Reports.cell(Sales_ReportsMaxRow + 1,Sales_ReportsMaxCol + 1)
         _cell4.font = ft_WhiteBold
-        _cell4.fill = blackFill             
+        _cell4.fill = blackFill
 
         strRange = xl_col_to_name(Sales_ReportsMaxCol - 1)  + '10' + ':' + xl_col_to_name(Sales_ReportsMaxCol) + str(Sales_ReportsMaxRow)
 
         set_border(wsSales_Reports,strRange)
         
 
-    def StockDataProcess(self,StockData,wb,StartDate):
+    def StockDataProcess(self,StockData,wb,StartDate,end_date):
         wsStock_Update  = wb['Stock Update']
 
         wsStock_UpdateMaxCol = maxCol(wsStock_Update,1,1)
         wsStock_UpdateMaxRow = maxRow(wsStock_Update,1,1)
 
-        for i in range(2,wsStock_UpdateMaxRow + 1):
-            if StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].count() == 1:
-                wsStock_Update.cell(i,wsStock_UpdateMaxCol + 1).value = StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].values[0]
-            else:
-                wsStock_Update.cell(i,wsStock_UpdateMaxCol + 1).value = 0
+        from datetime import timedelta, date
 
-        FormulaSQ = '=SUM(' + xl_col_to_name(wsStock_UpdateMaxCol,True) + str(2) + ':' + xl_col_to_name(wsStock_UpdateMaxCol,True) + str(wsStock_UpdateMaxRow) + ")"
+        #StartDate =  datetime.datetime.strptime(StartDate, "%d/%m/%Y")
+        #end_date = datetime.datetime.strptime(end_date, "%d/%m/%Y")
 
-        wsStock_Update[xl_col_to_name(wsStock_UpdateMaxCol) + str(wsStock_UpdateMaxRow + 1)].value = FormulaSQ
+        StartDate = datetime.datetime.strptime(StartDate, "%d/%m/%Y")         
 
-        FormulaPB = '=SUM(' + xl_col_to_name(3,True) + str(2) + ':' + xl_col_to_name(3,True) + str(wsStock_UpdateMaxRow) + ")"
-
-        wsStock_Update[xl_col_to_name(3,True) + str(wsStock_UpdateMaxRow + 1)].value = FormulaPB
+        end_date = datetime.datetime.strptime(end_date, "%d/%m/%Y")
         
-        strRange = xl_col_to_name(3)  + '2' + ':' + xl_col_to_name(3) + str(wsStock_UpdateMaxRow)
+        #Adjustment for end date
+        end_date = end_date + datetime.timedelta(days=1)
 
-        formulaAP = '=SUM(' + xl_col_to_name(4,True) + '{0}' + ':' + xl_col_to_name(wsStock_UpdateMaxCol,True) + '{0}'+ ")"
-        for i, cellObj in enumerate(wsStock_Update[strRange], 2):
-            cellObj[0].value = formulaAP.format(i)
+        def daterange(self,StartDate, end_date):
+            for n in range(int ((end_date - StartDate).days)):
+                yield StartDate + timedelta(n)
 
-        blackFill = PatternFill(start_color='FF000000', end_color='FF000000', fill_type='solid')
-        ft_White = Font(color=colors.WHITE)
-        ft_WhiteBold = Font(bold=True,color=colors.WHITE)
-        ft_BlackBold = Font(bold=True,color=colors.BLACK)
 
-        _cell1 = wsStock_Update.cell(1,wsStock_UpdateMaxCol + 1)        
-        _cell1.font = ft_White
-        _cell1.fill = blackFill
-        _cell1.value = 'Qty Rcvd ' + str(StartDate)
-        _cell1.alignment = Alignment(wrapText=True)
-        
-        _cell2 = wsStock_Update.cell(wsStock_UpdateMaxRow + 1,wsStock_UpdateMaxCol + 1)        
-        _cell2.font = ft_BlackBold
-        #_cell2.fill = blackFill
-        
-        strRange = xl_col_to_name(wsStock_UpdateMaxCol)  + '2' + ':' + xl_col_to_name(wsStock_UpdateMaxCol) + str(wsStock_UpdateMaxRow)
+        #marks = Enumerable(StockData)
+        #passing = marks.where(lambda x: x['Item SkuCode'] == 'CONHSOFQRK001') # results in [50, 80, 90]
 
-        set_border(wsStock_Update,strRange)
+        #print(passing)
+
+        col = 1
+        col2 = 0
+        for single_date in daterange(self,StartDate, end_date):
+            for i in range(2,wsStock_UpdateMaxRow + 1): # Loop through excel data
+                if StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].count() > 1:
+                    #wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value].values[0]
+                    #if datetime.datetime.strptime(StockData.loc[StockData['GRN Date']],'%d-%m-%Y').date() == single_date:
+                    df = StockData.loc[(StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value)]
+                    df['GRN Date'] = pd.to_datetime(df['GRN Date'])    
+                    df = df.set_index(['GRN Date'])                
+                    #df['GRN Date'] = df['GRN Date'].dt.date
+                    df = df.loc[single_date:single_date]
+                    df2 = df.reset_index()
+                    if df2.loc[df2['GRN Date'] == single_date,'Quantity Received'].count() == 1:
+                                            wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = df2.loc[(df2['GRN Date'] == single_date,'Quantity Received')].values[0]
+                    else:
+                        wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = 0
+                else:
+                    wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = 0
+               
+
+#print(df.loc[(df['GRN Date'] == '30-4-2019')])
+            FormulaSQ = '=SUM(' + xl_col_to_name(wsStock_UpdateMaxCol + col2,True) + str(2) + ':' + xl_col_to_name(wsStock_UpdateMaxCol + col2,True) + str(wsStock_UpdateMaxRow) + ")"
+
+            wsStock_Update[xl_col_to_name(wsStock_UpdateMaxCol + col2,True) + str(wsStock_UpdateMaxRow + 1)].value = FormulaSQ
+
+            FormulaPB = '=SUM(' + xl_col_to_name(3,True) + str(2) + ':' + xl_col_to_name(3,True) + str(wsStock_UpdateMaxRow) + ")"
+
+            wsStock_Update[xl_col_to_name(3,True) + str(wsStock_UpdateMaxRow + 1)].value = FormulaPB
+            
+            strRange = xl_col_to_name(3)  + '2' + ':' + xl_col_to_name(3) + str(wsStock_UpdateMaxRow)
+
+            formulaAP = '=SUM(' + xl_col_to_name(4,True) + '{0}' + ':' + xl_col_to_name(wsStock_UpdateMaxCol + col2,True) + '{0}'+ ")"
+            for i, cellObj in enumerate(wsStock_Update[strRange], 2):
+                cellObj[0].value = formulaAP.format(i)
+
+
+
+            ## Formating starts here 
+            blackFill = PatternFill(start_color='FF000000', end_color='FF000000', fill_type='solid')
+            ft_White = Font(color=colors.WHITE)
+           #ft_WhiteBold = Font(bold=True,color=colors.WHITE)
+            ft_BlackBold = Font(bold=True,color=colors.BLACK)
+
+            _cell1 = wsStock_Update.cell(1,wsStock_UpdateMaxCol + col)        
+            _cell1.font = ft_White
+            _cell1.fill = blackFill
+            _cell1.value = 'Qty Rcvd ' + str(single_date)
+            _cell1.alignment = Alignment(wrapText=True)
+            
+            _cell2 = wsStock_Update.cell(wsStock_UpdateMaxRow + 1,wsStock_UpdateMaxCol + col)        
+            _cell2.font = ft_BlackBold
+            #_cell2.fill = blackFill
+            
+            strRange = xl_col_to_name(wsStock_UpdateMaxCol + col2,True)  + '2' + ':' + xl_col_to_name(wsStock_UpdateMaxCol + col2) + str(wsStock_UpdateMaxRow)
+
+            set_border(wsStock_Update,strRange)
+            col = col + 1
+            col2 = col2 + 1
+
+        for jj in range(2,wsStock_UpdateMaxRow + 1):
+            mxColNow = maxCol(wsStock_Update,1,1)
+            for j in range(5,mxColNow):
+                formula = xl_col_to_name(j)
+                #print(wsStock_Update.cell(1,j + 2).value)
+                if j == 5 :
+                    
+                    if 'Returned' not in wsStock_Update.cell(1,j + 2).value:                
+                        formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) +  '+'
+                    if 'Returned' in wsStock_Update.cell(1,j + 2).value:
+                        formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) +  '-'
+                elif (j > 5) & (j <  mxColNow - 1):
+                    if 'Returned' not in wsStock_Update.cell(1,j + 2).value:
+                        formula1 = formula1 + (formula + str(jj)) +  '+'
+                    if 'Returned' in wsStock_Update.cell(1,j + 2).value:
+                        formula1 = formula1 + (formula + str(jj)) +  '-'
+                elif (j ==  mxColNow -1):
+                    formula1 = formula1 + (formula + str(jj))
+
+            wsStock_Update.cell(jj,4).value = "=" + formula1        
+
+
+
+
 
 
 
@@ -160,6 +230,7 @@ def GetFormuleBQ(intMaxCol,inRow):
         else:
             intcount = intcount + 1
     return formula1
+
 
 def set_border(ws, cell_range):
     rows = ws[cell_range]
