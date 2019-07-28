@@ -53,11 +53,18 @@ class processData:
         ft_White = Font(color=colors.WHITE)
         ft_WhiteBold = Font(bold=True,color=colors.WHITE)
         
+
+        TempDate = datetime.datetime.strptime(StartDate, "%d/%m/%Y") 
+        TempDate2 = datetime.datetime.strftime(TempDate, "%d-%m-%Y")
+        TempDate3 = datetime.datetime.strftime(TempDate, "%b")
+
         _cell1 = wsSales_Reports.cell(9,Sales_ReportsMaxCol)         
         _cell1.font = ft_White       
         _cell1.fill = blackFill
-        _cell1.value = StartDate
-        _cell1.alignment = Alignment(wrapText=True) 
+        #_cell1.value = datetime.datetime.strftime(StartDate, "%b") + " " + datetime.datetime.strftime(StartDate, "%d/%m/%Y")
+        _cell1.value =  TempDate3 + " " + TempDate2 
+        _cell1.alignment = Alignment(wrapText=True)
+
 
         _cell2 = wsSales_Reports.cell(9,Sales_ReportsMaxCol + 1)        
         _cell2.font = ft_White
@@ -74,10 +81,14 @@ class processData:
         _cell4.font = ft_WhiteBold
         _cell4.fill = blackFill
 
-        strRange = xl_col_to_name(Sales_ReportsMaxCol - 1)  + '10' + ':' + xl_col_to_name(Sales_ReportsMaxCol) + str(Sales_ReportsMaxRow)
+        strRange = xl_col_to_name(Sales_ReportsMaxCol - 1)  + '10' + ':' + xl_col_to_name(Sales_ReportsMaxCol) + str(Sales_ReportsMaxRow + 1)
+        
+        for row_cells in wsSales_Reports[strRange]:
+            for cell in row_cells:
+                cell.alignment = Alignment(horizontal='center', vertical='center')
 
         set_border(wsSales_Reports,strRange)
-        
+
 
     def StockDataProcess(self,StockData,wb,StartDate,end_date):
         wsStock_Update  = wb['Stock Update']
@@ -110,6 +121,26 @@ class processData:
         col = 1
         col2 = 0
         for single_date in daterange(self,StartDate, end_date):
+            Total = 0
+            for i in range(2,wsStock_UpdateMaxRow + 1): # Loop through excel data
+                if StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].count() > 1:
+                    #wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value].values[0]
+                    #if datetime.datetime.strptime(StockData.loc[StockData['GRN Date']],'%d-%m-%Y').date() == single_date:
+                    df = StockData.loc[(StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value)]
+                    df['GRN Date'] = pd.to_datetime(df['GRN Date'])    
+                    df = df.set_index(['GRN Date'])                
+                    #df['GRN Date'] = df['GRN Date'].dt.date
+                    df = df.loc[single_date:single_date]
+                    df2 = df.reset_index()
+                    if df2.loc[df2['GRN Date'] == single_date,'Quantity Received'].count() == 1:
+                                            Total = Total + df2.loc[(df2['GRN Date'] == single_date,'Quantity Received')].values[0]
+                    else:
+                        Total = Total + 0
+                else:
+                    Total = Total + 0
+            if Total <= 0 :
+                continue
+
             for i in range(2,wsStock_UpdateMaxRow + 1): # Loop through excel data
                 if StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].count() > 1:
                     #wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value].values[0]
@@ -126,7 +157,6 @@ class processData:
                         wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = 0
                 else:
                     wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = 0
-               
 
 #print(df.loc[(df['GRN Date'] == '30-4-2019')])
             FormulaSQ = '=SUM(' + xl_col_to_name(wsStock_UpdateMaxCol + col2,True) + str(2) + ':' + xl_col_to_name(wsStock_UpdateMaxCol + col2,True) + str(wsStock_UpdateMaxRow) + ")"
@@ -151,17 +181,27 @@ class processData:
            #ft_WhiteBold = Font(bold=True,color=colors.WHITE)
             ft_BlackBold = Font(bold=True,color=colors.BLACK)
 
+            #DateTemp = datetime.datetime.strptime(single_date, "%d/%m/%Y") 
+
             _cell1 = wsStock_Update.cell(1,wsStock_UpdateMaxCol + col)        
             _cell1.font = ft_White
             _cell1.fill = blackFill
-            _cell1.value = 'Qty Rcvd ' + str(single_date)
+            _cell1.value = 'Qty Rcvd ' + datetime.datetime.strftime(single_date, "%d/%m/%Y") 
             _cell1.alignment = Alignment(wrapText=True)
             
+            #side = Side(border_style='thin', color="FF000000")
+
             _cell2 = wsStock_Update.cell(wsStock_UpdateMaxRow + 1,wsStock_UpdateMaxCol + col)        
             _cell2.font = ft_BlackBold
+            _cell2.alignment = Alignment(horizontal='center', vertical='center')            
+
             #_cell2.fill = blackFill
             
-            strRange = xl_col_to_name(wsStock_UpdateMaxCol + col2,True)  + '2' + ':' + xl_col_to_name(wsStock_UpdateMaxCol + col2) + str(wsStock_UpdateMaxRow)
+            strRange = xl_col_to_name(wsStock_UpdateMaxCol + col2,True)  + '2' + ':' + xl_col_to_name(wsStock_UpdateMaxCol + col2) + str(wsStock_UpdateMaxRow + 1)
+
+            for row_cells in wsStock_Update[strRange]:
+                for cell in row_cells:
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
 
             set_border(wsStock_Update,strRange)
             col = col + 1
@@ -172,21 +212,33 @@ class processData:
             for j in range(5,mxColNow):
                 formula = xl_col_to_name(j)
                 #print(wsStock_Update.cell(1,j + 2).value)
-                if j == 5 :
-                    
-                    if 'Returned' not in wsStock_Update.cell(1,j + 2).value:                
-                        formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) +  '+'
-                    if 'Returned' in wsStock_Update.cell(1,j + 2).value:
-                        formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) +  '-'
-                elif (j > 5) & (j <  mxColNow - 1):
-                    if 'Returned' not in wsStock_Update.cell(1,j + 2).value:
-                        formula1 = formula1 + (formula + str(jj)) +  '+'
-                    if 'Returned' in wsStock_Update.cell(1,j + 2).value:
-                        formula1 = formula1 + (formula + str(jj)) +  '-'
-                elif (j ==  mxColNow -1):
-                    formula1 = formula1 + (formula + str(jj))
+                if mxColNow == 6:
+                    cell_ = wsStock_Update.cell(1,j + 1).value
 
-            wsStock_Update.cell(jj,4).value = "=" + formula1        
+                    if 'Returned' not in cell_:                
+                            formula1 = 'E' + str(jj) + '+' + (formula + str(jj))
+                    if 'Returned' in cell_:
+                            formula1 = 'E' + str(jj) + '-' + (formula + str(jj))
+                else :
+                    cell_ = wsStock_Update.cell(1,j + 1).value
+                              
+                    if j == 5 :                                        
+                        if 'Returned' not in cell_:                
+                            formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) +  '+'
+                        if 'Returned' in cell_:
+                            formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) +  '-'
+
+                    elif (j > 5) & (j <  mxColNow - 1):
+
+                        if 'Returned' not in cell_:
+                            formula1 = formula1 + (formula + str(jj)) +  '+'
+                        if 'Returned' in cell_:
+                            formula1 = formula1 + (formula + str(jj)) +  '-'
+                            
+                    elif (j ==  mxColNow -1):
+                        formula1 = formula1 + (formula + str(jj))
+
+            wsStock_Update.cell(jj,4).value = "=" + formula1
 
 
 
@@ -239,18 +291,18 @@ def set_border(ws, cell_range):
     rows = list(rows)  # we convert iterator to list for simplicity, but it's not memory efficient solution
     max_y = len(rows) - 1  # index of the last row
     for pos_y, cells in enumerate(rows):
-        max_x = len(cells) - 1  # index of the last cell
-        for pos_x, cell in enumerate(cells):
+        max_x = len(cells) - 1  # index of the last cell        
+        for pos_x, cell in enumerate(cells):                       
             border = Border(
                 left=cell.border.left,
                 right=cell.border.right,
                 top=cell.border.top,
-                bottom=cell.border.bottom
+                bottom=cell.border.bottom                
             )
             border.left = side
             border.right = side
             border.top = side
-            border.bottom = side
+            border.bottom = side           
             #if pos_x == 0:
             #    border.left = side
             #if pos_x == max_x:

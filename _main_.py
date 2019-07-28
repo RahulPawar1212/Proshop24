@@ -9,6 +9,7 @@ import shutil
 import glob
 #from tkinter import *
 from tkinter import filedialog,messagebox,Entry,Button,StringVar,Label,Tk
+import tkinter as tk 
 import time
 #from xlsxwriter.utility import xl_rowcol_to_cell,xl_col_to_name
 #from openpyxl.styles import Fill,Font,Color
@@ -16,23 +17,52 @@ import time
 
 class StartProcess:
     def __init__(self):
-        root = Tk()
-        #filedialog = filedialog()
-        ##
-        print("Select GRN file.")
-        self.GrnPath  = filedialog.askopenfilename(initialdir="/",
-                                                title = "Select GRN File",
-                                                filetypes = (("Excel Files","*.csv"),("All Files","*.*")))
+        root = tk.Tk()        
 
-        print("GRN file path : " + self.GrnPath)
+        self.RunStockProcess  = False
+        self.RunSalesProcess = False
+
+        def SelectStockProcess():
+            self.RunStockProcess = True            
+            root.quit()
+            root.withdraw()
+
+        def SelectSalesProcess():
+            self.RunSalesProcess = True           
+            root.quit()
+            root.withdraw()
+
+        #SelectPFrom = Tk()
+        root.title("Select Process")
+        root.geometry('250x100')
+
+        StockButton = Button(root, text="Stock Update", fg="Black", bg="Green",command=SelectStockProcess) 
+        StockButton.grid(row=7, column=2)
+      
+        SalesButton = Button(root, text="Sales Process", fg="Black", bg="Green",command=SelectSalesProcess) 
+        SalesButton.grid(row=8, column=2)
+      
+        root.mainloop()
+     
+
+        #filedialog = filedialog()
+        if self.RunStockProcess == True:
+            ##
+            print("Select GRN file.")
+            self.GrnPath  = filedialog.askopenfilename(initialdir="/",
+                                                    title = "Select GRN File",
+                                                    filetypes = (("Excel Files","*.csv"),("All Files","*.*")))
+
+            print("GRN file path : " + self.GrnPath)
         
         ##
-        print("Select sales data path.")
-        self.SalesDataPath  = filedialog.askopenfilename(initialdir="/",
-                                                title = "Select sales data path",
-                                                filetypes = (("Excel Files","*.csv"),("All Files","*.*")))
-        
-        print("Sales Path : " + self.SalesDataPath)
+        if self.RunSalesProcess == True:
+            print("Select sales data file.")
+            self.SalesDataPath  = filedialog.askopenfilename(initialdir="/",
+                                                    title = "Select sales data path",
+                                                    filetypes = (("Excel Files","*.csv"),("All Files","*.*")))
+            
+            print("Sales Path : " + self.SalesDataPath)
         
         ##
         print("Select sales reports file's folder")
@@ -42,7 +72,7 @@ class StartProcess:
         root.withdraw()
 
         main1 = Tk()
-        main1.title("SelectDates")
+        main1.title("Select Dates")
         main1.geometry('250x100')
      
         def close_window():
@@ -76,8 +106,12 @@ class StartProcess:
         #root.destroy()
         
         ## Execution
-        GrnDataPath = Path(self.GrnPath)
-        SalesDataPath = Path(self.SalesDataPath)
+        if self.RunStockProcess == True: 
+            GrnDataPath = Path(self.GrnPath)
+        
+        if self.RunSalesProcess == True:
+            SalesDataPath = Path(self.SalesDataPath)
+        
         SalesReporExcel = Path(self.SalesReporFolderPath)
         #print("Enter start date")
         #getStartDate = input()
@@ -100,40 +134,76 @@ class StartProcess:
         
         #************************** Import Data *******************************
         Di = DataImport.dataImport()
-        GRNdata = Di.getGRNData(GrnDataPath,StartDate,EndDate)
+
+        if self.RunStockProcess == True:
+            GRNdata = Di.getGRNData(GrnDataPath,StartDate,EndDate)
+        
         #print(GRNdata)
-        SalesData = Di.getsalesData(SalesDataPath,StartDate,EndDate)
+        if self.RunSalesProcess == True:
+            SalesData = Di.getsalesData(SalesDataPath,StartDate,EndDate)
         #*****************************************************************
+#
+        if self.RunStockProcess == True:
+            SalesRptXlintoOutPut = SalesReporExcel
+            SalesRptXlintoOutPut = SalesRptXlintoOutPut.joinpath('Stock Updates Output')
 
-        SalesRptXlintoOutPut = SalesReporExcel
-        SalesRptXlintoOutPut = SalesRptXlintoOutPut.joinpath('Output')
+            # Create folder if not exists / delete if exists and recreate folder
+            if not os.path.exists(SalesRptXlintoOutPut):
+                os.makedirs(SalesRptXlintoOutPut)
+            elif os.path.exists(SalesRptXlintoOutPut):
+                shutil.rmtree(SalesRptXlintoOutPut)
+                os.makedirs(SalesRptXlintoOutPut)
 
-        # Create folder if not exists / delete if exists and recreate folder
-        if not os.path.exists(SalesRptXlintoOutPut):
-            os.makedirs(SalesRptXlintoOutPut)
-        elif os.path.exists(SalesRptXlintoOutPut):
-            shutil.rmtree(SalesRptXlintoOutPut)
-            os.makedirs(SalesRptXlintoOutPut)
-
-        import ntpath
-        strSalesReporExcel
-        # Get file names from path along with path
-        files = glob.glob(strSalesReporExcel + '\\' + '*.xlsx')
-        for entry in files:    
-            # Sales report excel
-            #wb = pyxl.load_workbook(filename= SalesReporExcel.joinpath ('Sample Report 2.xlsx') ,read_only=False)
-            wb = pyxl.load_workbook(filename= entry ,read_only=False)
-
-            Dp = DataProcessing.processData()
-            Dp.SalesDataProcess(SalesData,wb,StartDate)
-            Dp.StockDataProcess(GRNdata,wb,StartDate,EndDate)   
+            import ntpath
+            strSalesReporExcel
             
+            # Get file names from path along with path
+            files = glob.glob(strSalesReporExcel + '\\' + '*.xlsx')
+            for entry in files:    
+                # Sales report excel
+                #wb = pyxl.load_workbook(filename= SalesReporExcel.joinpath ('Sample Report 2.xlsx') ,read_only=False)
+                wb = pyxl.load_workbook(filename= entry ,read_only=False)
 
-            testpath =  ntpath.basename(entry)
-            wb.save(SalesRptXlintoOutPut.joinpath(testpath))
+                Dp = DataProcessing.processData()
+                Dp.StockDataProcess(GRNdata,wb,StartDate,EndDate)   
+                
+                testpath =  ntpath.basename(entry)
+                wb.save(SalesRptXlintoOutPut.joinpath(testpath))
+
+#       
+
+        if self.RunSalesProcess == True:
+            strSalesReporExcel2 = os.path.normpath(strSalesReporExcel + os.sep + os.pardir)
+            #SalesRptXlintoOutPut2 = SalesReporExcel
+            SalesRptXlintoOutPut2 = Path(strSalesReporExcel2)
+            SalesRptXlintoOutPut2 = SalesRptXlintoOutPut2.joinpath('Final Output')
+
+            # Create folder if not exists / delete if exists and recreate folder
+            if not os.path.exists(SalesRptXlintoOutPut2):
+                os.makedirs(SalesRptXlintoOutPut2)
+            elif os.path.exists(SalesRptXlintoOutPut2):
+                shutil.rmtree(SalesRptXlintoOutPut2)
+                os.makedirs(SalesRptXlintoOutPut2)
+
+            import ntpath
+            #strSalesReporExcel
+            
+            # Get file names from path along with path
+            files = glob.glob(strSalesReporExcel2 + '\\Stock Updates Output\\' + '*.xlsx')
+            for entry in files:    
+                # Sales report excel
+                #wb = pyxl.load_workbook(filename= SalesReporExcel.joinpath ('Sample Report 2.xlsx') ,read_only=False)
+                wb = pyxl.load_workbook(filename= entry ,read_only=False)
+
+                Dp = DataProcessing.processData()                
+                Dp.SalesDataProcess(SalesData,wb,StartDate)                                                
+
+                testpath =  ntpath.basename(entry)
+                wb.save(SalesRptXlintoOutPut2.joinpath(testpath))
+
 
         print("Report Generated....")
-        time.sleep(int(4))
+        #time.sleep(int(4))
 
         messagebox.showinfo("Message.", "Reports generated")
         #Testing

@@ -41,7 +41,7 @@ class dataImport:
             for n in range(int ((end_date - StartDate).days)):
                 yield StartDate + timedelta(n)
       
-        def Reverse(self,lst): 
+        def Reverse(self,lst):
             return [ele for ele in reversed(list(enumerate(lst)))]
 
         for single_date in daterange(self,StartDate1, EndDate1):
