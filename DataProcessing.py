@@ -3,19 +3,21 @@ import datetime
 from pathlib import Path
 import pandas as pd
 import openpyxl as pyxl
+from openpyxl.formula.translate import Translator
 from openpyxl.styles import Alignment, Color, Font, PatternFill, colors
 from openpyxl.styles.borders import Border, Side
 from xlsxwriter.utility import xl_col_to_name, xl_rowcol_to_cell
 from py_linq import Enumerable
-
+import xlwings as xw
+import xlrd
+import os
 class processData:
     def __init__(self):
         self
     
-    def SalesDataProcess(self,SalesData,wb,StartDate):
+    def SalesDataProcess(self,SalesData,wb,StartDate,SalesRptXlintoOutPut,entry):
        
-        wsSales_Reports  = wb['Sales Reports']
-        
+        wsSales_Reports  = wb['Sales Reports']        
         Sales_ReportsMaxCol = maxCol(wsSales_Reports,9,1)
         Sales_ReportsMaxRow = maxRow(wsSales_Reports,9,1)
 
@@ -88,6 +90,42 @@ class processData:
                 cell.alignment = Alignment(horizontal='center', vertical='center')
 
         set_border(wsSales_Reports,strRange)
+        
+        import ntpath
+        testpath =  ntpath.basename(entry)
+        wb.save(SalesRptXlintoOutPut.joinpath(testpath))
+        
+
+        #wb = xw.Book(app_visible=False))
+        strPath = os.path.abspath(str(SalesRptXlintoOutPut.joinpath(testpath)))
+        wb = xw.Book(strPath)
+        app = xw.apps.active
+        app.visible = False
+        #xw.visible = False
+        sht = wb.sheets['Sales Reports']
+        my_values = sht.range('$G10:' + xl_col_to_name(Sales_ReportsMaxCol ,True) + str(Sales_ReportsMaxRow) ).options(ndim=2).value         
+        sht.range('$G10').value = my_values
+
+        for i in range(10,Sales_ReportsMaxRow):
+            intBalQ = sht.range(xl_col_to_name(Sales_ReportsMaxCol + 1,True) + str(i)).value
+            intLastCol = sht.range(xl_col_to_name(Sales_ReportsMaxCol - 1,True) + str(i)).value            
+            if(intBalQ < 0):
+                sht.range(xl_col_to_name(Sales_ReportsMaxCol - 1,True) + str(i)).value = (int(intLastCol) - abs(intBalQ))
+
+        wb.save()
+        #wb.close()
+        app.quit()
+        
+
+        
+        #sht.range('E8').value
+        #wb2 = pyxl.load_workbook(filename= SalesRptXlintoOutPut.joinpath(testpath))
+        #wsSales_Reports2 = wb2['Sales Reports']   
+        #read_fullreport = xlrd.open_workbook(SalesRptXlintoOutPut.joinpath(testpath))
+        #read_fullreport_sheet = read_fullreport.sheet_by_index(0)
+        #ipAddressofMC = read_fullreport_sheet.cell_value(10, 8)
+        #val = wsSales_Reports2['H10'].value
+        #xx = ipAddressofMC
 
 
     def StockDataProcess(self,StockData,wb,StartDate,end_date):

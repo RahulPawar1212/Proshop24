@@ -196,10 +196,10 @@ class StartProcess:
                 wb = pyxl.load_workbook(filename= entry ,read_only=False)
 
                 Dp = DataProcessing.processData()                
-                Dp.SalesDataProcess(SalesData,wb,StartDate)                                                
+                Dp.SalesDataProcess(SalesData,wb,StartDate,SalesRptXlintoOutPut2,entry)                                                
 
-                testpath =  ntpath.basename(entry)
-                wb.save(SalesRptXlintoOutPut2.joinpath(testpath))
+                #testpath =  ntpath.basename(entry)
+                #wb.save(SalesRptXlintoOutPut2.joinpath(testpath))
 
 
         print("Report Generated....")

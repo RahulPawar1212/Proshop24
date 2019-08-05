@@ -70,7 +70,7 @@ class dataImport:
     def getsalesData(self,filepath,StartDate,EndDate):
         
         #Read data from csv file
-        salesdata = pd.read_csv(filepath,sep=',')
+        salesdata = pd.read_csv(filepath,sep=';')
 
         #Select required columns
         salesdata = salesdata[['Sale Order Status','Item SKU Code','Order Date as dd/mm/yyyy hh:MM:ss']]
