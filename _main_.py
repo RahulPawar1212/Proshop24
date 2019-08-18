@@ -7,6 +7,7 @@ import datetime
 import os
 import shutil
 import glob
+import pandas as pd
 #from tkinter import *
 from tkinter import filedialog,messagebox,Entry,Button,StringVar,Label,Tk
 import tkinter as tk 
@@ -21,6 +22,8 @@ class StartProcess:
 
         self.RunStockProcess  = False
         self.RunSalesProcess = False
+        self.RunNewSkuCehckProcess = False
+        
 
         def SelectStockProcess():
             self.RunStockProcess = True            
@@ -29,6 +32,11 @@ class StartProcess:
 
         def SelectSalesProcess():
             self.RunSalesProcess = True           
+            root.quit()
+            root.withdraw()
+
+        def NewSkuCehckProcess():
+            self.RunNewSkuCehckProcess = True           
             root.quit()
             root.withdraw()
 
@@ -41,12 +49,15 @@ class StartProcess:
       
         SalesButton = Button(root, text="Sales Process", fg="Black", bg="Green",command=SelectSalesProcess) 
         SalesButton.grid(row=8, column=2)
+
+        NewSkusButton = Button(root, text="check new skus", fg="Black", bg="Green",command=NewSkuCehckProcess) 
+        NewSkusButton.grid(row=9, column=2)
       
         root.mainloop()
      
 
         #filedialog = filedialog()
-        if self.RunStockProcess == True:
+        if self.RunStockProcess == True or self.RunNewSkuCehckProcess == True:
             ##
             print("Select GRN file.")
             self.GrnPath  = filedialog.askopenfilename(initialdir="/",
@@ -63,6 +74,8 @@ class StartProcess:
                                                     filetypes = (("Excel Files","*.csv"),("All Files","*.*")))
             
             print("Sales Path : " + self.SalesDataPath)
+
+        
         
         ##
         print("Select sales reports file's folder")
@@ -106,7 +119,7 @@ class StartProcess:
         #root.destroy()
         
         ## Execution
-        if self.RunStockProcess == True: 
+        if self.RunStockProcess == True  or self.RunNewSkuCehckProcess == True: 
             GrnDataPath = Path(self.GrnPath)
         
         if self.RunSalesProcess == True:
@@ -135,7 +148,7 @@ class StartProcess:
         #************************** Import Data *******************************
         Di = DataImport.dataImport()
 
-        if self.RunStockProcess == True:
+        if self.RunStockProcess == True or self.RunNewSkuCehckProcess == True:
             GRNdata = Di.getGRNData(GrnDataPath,StartDate,EndDate)
         
         #print(GRNdata)
@@ -190,7 +203,7 @@ class StartProcess:
             
             # Get file names from path along with path
             files = glob.glob(strSalesReporExcel2 + '\\Stock Updates Output\\' + '*.xlsx')
-            for entry in files:    
+            for entry in files:
                 # Sales report excel
                 #wb = pyxl.load_workbook(filename= SalesReporExcel.joinpath ('Sample Report 2.xlsx') ,read_only=False)
                 wb = pyxl.load_workbook(filename= entry ,read_only=False)
@@ -201,6 +214,45 @@ class StartProcess:
                 #testpath =  ntpath.basename(entry)
                 #wb.save(SalesRptXlintoOutPut2.joinpath(testpath))
 
+        if self.RunNewSkuCehckProcess == True:
+            strSalesReporExcel = os.path.abspath(str(SalesReporExcel))
+            #SalesRptXlintoOutPut2 = SalesReporExcel
+            SalesRptXlintoOutPut2 = Path(strSalesReporExcel)
+            SalesRptXlintoOutPut2 = SalesRptXlintoOutPut2.joinpath('New Skus')
+
+            # Create folder if not exists / delete if exists and recreate folder
+            if not os.path.exists(SalesRptXlintoOutPut2):
+                os.makedirs(SalesRptXlintoOutPut2)
+            elif os.path.exists(SalesRptXlintoOutPut2):
+                shutil.rmtree(SalesRptXlintoOutPut2)
+                os.makedirs(SalesRptXlintoOutPut2)
+
+            import ntpath
+            #strSalesReporExcel
+            
+            # Get file names from path along with path
+            files = glob.glob(strSalesReporExcel + '\\' + '*.xlsx')
+            dfAlldata = pd.DataFrame()
+            for entry in files:
+                # Sales report excel
+                #wb = pyxl.load_workbook(filename= SalesReporExcel.joinpath ('Sample Report 2.xlsx') ,read_only=False)
+                wb = pyxl.load_workbook(filename= entry ,read_only=False)
+
+                Dp = DataProcessing.processData()                
+                df = Dp.NewSkusFinder(wb)
+                dfAlldata = dfAlldata.append(df,ignore_index=True)                                       
+
+                #testpath =  ntpath.basename(entry)
+                #wb.save(SalesRptXlintoOutPut2.joinpath(testpath))
+
+            GRNdataExtract = pd.DataFrame(GRNdata['Item SkuCode'].unique())
+            dfAlldata = dfAlldata[0].values
+
+            newskus = GRNdataExtract[~GRNdataExtract.isin(dfAlldata)]
+            #newskusdf =  GRNdataExtract.loc[newskus]
+            writer1 = pd.ExcelWriter(os.path.abspath(SalesRptXlintoOutPut2) + '\\New Skus.xlsx')
+            newskus.to_excel(writer1, sheet_name='Sheet1',index=False)
+            writer1.save()
 
         print("Report Generated....")
         #time.sleep(int(4))

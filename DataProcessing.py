@@ -281,9 +281,23 @@ class processData:
 
 
 
+    def NewSkusFinder(self,wb):
+        wsSR  = wb['Sales Reports']
+        wsStock_UpdateMaxRow = maxRow(wsSR,9,1)
+        drSR = lstDataset(wsSR,'B10','B' + str(wsStock_UpdateMaxRow))
+        dfwsBrand_Awareness = pd.DataFrame(drSR)
+        return dfwsBrand_Awareness
 
 
-
+# Read the cell values into a list of lists
+def lstDataset(ws,strStart,strEnd):
+    data_rows = []
+    for row in ws[strStart:strEnd]:
+        data_cols = []
+        for cell in row:
+            data_cols.append(cell.value)
+        data_rows.append(data_cols)
+    return data_rows
 
 
 def maxCol(ws,intStartRow,intStartCol):
