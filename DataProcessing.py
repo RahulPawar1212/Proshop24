@@ -262,20 +262,22 @@ class processData:
                               
                     if j == 5 :                                        
                         if 'Returned' not in cell_:                
-                            formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) +  '+'
+                            formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) 
                         if 'Returned' in cell_:
-                            formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) +  '-'
+                            formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) 
 
                     elif (j > 5) & (j <  mxColNow - 1):
 
                         if 'Returned' not in cell_:
-                            formula1 = formula1 + (formula + str(jj)) +  '+'
+                            formula1 = formula1 +  '+' + (formula + str(jj)) 
                         if 'Returned' in cell_:
-                            formula1 = formula1 + (formula + str(jj)) +  '-'
+                            formula1 = formula1 +  '-' + (formula + str(jj)) 
                             
                     elif (j ==  mxColNow -1):
-                        formula1 = formula1 + (formula + str(jj))
-
+                         if 'Returned' not in cell_:
+                            formula1 = formula1 + '+' + (formula + str(jj))
+                         if 'Returned' in cell_:
+                             formula1 = formula1 + '-' + (formula + str(jj))
             wsStock_Update.cell(jj,4).value = "=" + formula1
 
 

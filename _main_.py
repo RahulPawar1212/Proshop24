@@ -70,7 +70,7 @@ class StartProcess:
         if self.RunSalesProcess == True:
             print("Select sales data file.")
             self.SalesDataPath  = filedialog.askopenfilename(initialdir="/",
-                                                    title = "Select sales data path",
+                                                    title = "Select Sales Data File",
                                                     filetypes = (("Excel Files","*.csv"),("All Files","*.*")))
             
             print("Sales Path : " + self.SalesDataPath)
