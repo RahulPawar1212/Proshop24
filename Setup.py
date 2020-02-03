@@ -2,8 +2,8 @@ from cx_Freeze import setup, Executable
 import sys
 import os
 
-os.environ['TCL_LIBRARY'] = r'C:\Users\rahul.pawar\AppData\Local\Programs\Python\Python37-32\tcl\tcl8.6'
-os.environ['TK_LIBRARY'] = r'C:\Users\rahul.pawar\AppData\Local\Programs\Python\Python37-32\tcl\tk8.6'
+os.environ['TCL_LIBRARY'] = r'tcl8.6'
+os.environ['TK_LIBRARY'] = r'tk8.6'
 
 
 build_exe_options = {
