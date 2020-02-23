@@ -39,3 +39,8 @@ Run Stock update
 
 
 
+Notes...
+* Make sure that PC delimation format should be ',' comma.
+
+
+
