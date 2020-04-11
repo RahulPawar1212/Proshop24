@@ -5,10 +5,11 @@ from datetime import timedelta, date
 class dataImport:
     def __init__(self):
         self
-    
+    # *** as per the business logic data import gives sum of qunatity received and 
+    # *** Salesdata input gives count of the data. 
     def getGRNData(self, filepath,StartDate,EndDate):
         #Read data from csv file
-        GRNdata = pd.read_csv(filepath,sep=';')
+        GRNdata = pd.read_csv(filepath,sep=',',parse_dates = ['GRN Date'],dayfirst = True)
         #Select required columns
         GRNdata = GRNdata[['GRN Date','Item SkuCode','Quantity Received']]
         # Create mask to get skus of begins with 'con'
@@ -63,16 +64,20 @@ class dataImport:
         GRNdata['GRN Date'] = GRNdata['GRN Date'].dt.date
 
         #Get count of data
-        GRNdataCount = GRNdata.groupby(['GRN Date','Item SkuCode']).count().reset_index()
+        #GRNdataCount = GRNdata.groupby(['GRN Date','Item SkuCode']).count().reset_index()
+
+        GRNdataCount = GRNdata.groupby(['GRN Date','Item SkuCode']).sum()
+
+        GRNdataCount = GRNdataCount.reset_index()
 
         return GRNdataCount
 
     def getsalesData(self,filepath,StartDate,EndDate):
         
         #Read data from csv file
-        salesdata = pd.read_csv(filepath,sep=';')
+        salesdata = pd.read_csv(filepath,sep=',',parse_dates = ['Order Date as dd/mm/yyyy hh:MM:ss'],dayfirst = True)
 
-        #Select required columns
+        #Select required columns    
         salesdata = salesdata[['Sale Order Status','Item SKU Code','Order Date as dd/mm/yyyy hh:MM:ss']]
 
         # convert column to date

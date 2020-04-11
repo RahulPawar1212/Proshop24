@@ -125,7 +125,7 @@ class processData:
         #read_fullreport_sheet = read_fullreport.sheet_by_index(0)
         #ipAddressofMC = read_fullreport_sheet.cell_value(10, 8)
         #val = wsSales_Reports2['H10'].value
-        #xx = ipAddressofMC
+        #xx = ipAddressofMC2
 
 
     def StockDataProcess(self,StockData,wb,StartDate,end_date):
@@ -161,11 +161,11 @@ class processData:
         for single_date in daterange(self,StartDate, end_date):
             Total = 0
             for i in range(2,wsStock_UpdateMaxRow + 1): # Loop through excel data
-                if StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].count() > 1:
+                if StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].count() >= 1:
                     #wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value].values[0]
                     #if datetime.datetime.strptime(StockData.loc[StockData['GRN Date']],'%d-%m-%Y').date() == single_date:
                     df = StockData.loc[(StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value)]
-                    df['GRN Date'] = pd.to_datetime(df['GRN Date'])    
+                    df['GRN Date'] = pd.to_datetime(df['GRN Date'])  
                     df = df.set_index(['GRN Date'])                
                     #df['GRN Date'] = df['GRN Date'].dt.date
                     df = df.loc[single_date:single_date]
@@ -180,7 +180,7 @@ class processData:
                 continue
 
             for i in range(2,wsStock_UpdateMaxRow + 1): # Loop through excel data
-                if StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].count() > 1:
+                if StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value,'Quantity Received'].count() >= 1:
                     #wsStock_Update.cell(i,wsStock_UpdateMaxCol + col).value = StockData.loc[StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value].values[0]
                     #if datetime.datetime.strptime(StockData.loc[StockData['GRN Date']],'%d-%m-%Y').date() == single_date:
                     df = StockData.loc[(StockData['Item SkuCode'] == wsStock_Update.cell(i,2).value)]
@@ -278,6 +278,14 @@ class processData:
                             formula1 = formula1 + '+' + (formula + str(jj))
                          if 'Returned' in cell_:
                              formula1 = formula1 + '-' + (formula + str(jj))
+            if mxColNow == 5:
+                cell_ = wsStock_Update.cell(1,5).value
+                    
+                if 'Returned' not in cell_:                
+                    formula1 = 'E' + str(jj)
+                if 'Returned' in cell_:
+                    formula1 = '-' + 'E' + str(jj) 
+
             wsStock_Update.cell(jj,4).value = "=" + formula1
 
 
