@@ -251,39 +251,39 @@ class processData:
                 formula = xl_col_to_name(j)
                 #print(wsStock_Update.cell(1,j + 2).value)
                 if mxColNow == 6:
-                    cell_ = wsStock_Update.cell(1,j + 1).value
+                    cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('RETURNED')
 
-                    if 'Returned' not in cell_:                
+                    if cell_ < 0 :                
                             formula1 = 'E' + str(jj) + '+' + (formula + str(jj))
-                    if 'Returned' in cell_:
+                    if cell_ >= 0:
                             formula1 = 'E' + str(jj) + '-' + (formula + str(jj))
                 else :
-                    cell_ = wsStock_Update.cell(1,j + 1).value
+                    cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('RETURNED')
                               
                     if j == 5 :                                        
-                        if 'Returned' not in cell_:                
+                        if cell_ < 0:                
                             formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) 
-                        if 'Returned' in cell_:
-                            formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) 
+                        if cell_ >= 0:
+                            formula1 = 'E' + str(jj) + '-' + (formula + str(jj)) 
 
                     elif (j > 5) & (j <  mxColNow - 1):
 
-                        if 'Returned' not in cell_:
+                        if cell_ < 0:
                             formula1 = formula1 +  '+' + (formula + str(jj)) 
-                        if 'Returned' in cell_:
+                        if cell_ >= 0:
                             formula1 = formula1 +  '-' + (formula + str(jj)) 
                             
                     elif (j ==  mxColNow -1):
-                         if 'Returned' not in cell_:
+                         if cell_ < 0:
                             formula1 = formula1 + '+' + (formula + str(jj))
-                         if 'Returned' in cell_:
+                         if cell_ >= 0:
                              formula1 = formula1 + '-' + (formula + str(jj))
             if mxColNow == 5:
-                cell_ = wsStock_Update.cell(1,5).value
+                cell_ = wsStock_Update.cell(1,5).value.upper().find('RETURNED')
                     
-                if 'Returned' not in cell_:                
+                if cell_ < 0:                
                     formula1 = 'E' + str(jj)
-                if 'Returned' in cell_:
+                if cell_ >= 0:
                     formula1 = '-' + 'E' + str(jj) 
 
             wsStock_Update.cell(jj,4).value = "=" + formula1
