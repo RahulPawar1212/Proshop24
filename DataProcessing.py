@@ -250,16 +250,30 @@ class processData:
             for j in range(5,mxColNow):
                 formula = xl_col_to_name(j)
                 #print(wsStock_Update.cell(1,j + 2).value)
-                if mxColNow == 6:
-                    cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('RETURNED')
-
+                if mxColNow == 6:                    
+                    
+                    cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('RETURNED')                    
+                    if  cell_ < 0 :
+                        cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('SWITCH SKU')
+                    if  cell_ < 0 :
+                        cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('POP PO')
+                    if  cell_ < 0 :
+                        cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('WRONG INWARD')
+                    
                     if cell_ < 0 :                
                             formula1 = 'E' + str(jj) + '+' + (formula + str(jj))
                     if cell_ >= 0:
                             formula1 = 'E' + str(jj) + '-' + (formula + str(jj))
                 else :
+                    
                     cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('RETURNED')
-                              
+                    if  cell_ < 0 :
+                        cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('SWITCH SKU')
+                    if  cell_ < 0 :
+                        cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('POP PO')
+                    if  cell_ < 0 :
+                        cell_ = wsStock_Update.cell(1,j + 1).value.upper().find('WRONG INWARD')                              
+                    
                     if j == 5 :                                        
                         if cell_ < 0:                
                             formula1 = 'E' + str(jj) + '+' + (formula + str(jj)) 
@@ -279,7 +293,14 @@ class processData:
                          if cell_ >= 0:
                              formula1 = formula1 + '-' + (formula + str(jj))
             if mxColNow == 5:
+                
                 cell_ = wsStock_Update.cell(1,5).value.upper().find('RETURNED')
+                if  cell_ < 0 :
+                    cell_ = wsStock_Update.cell(1,5).value.upper().find('SWITCH SKU')
+                if  cell_ < 0 :
+                    cell_ = wsStock_Update.cell(1,5).value.upper().find('POP PO')
+                if  cell_ < 0 :
+                    cell_ = wsStock_Update.cell(1,5).value.upper().find('Wrong Inward')
                     
                 if cell_ < 0:                
                     formula1 = 'E' + str(jj)
@@ -287,8 +308,6 @@ class processData:
                     formula1 = '-' + 'E' + str(jj) 
 
             wsStock_Update.cell(jj,4).value = "=" + formula1
-
-
 
 
     def NewSkusFinder(self,wb):
